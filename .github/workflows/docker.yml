@@ -1,0 +1,39 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types:
+      - published
+
+jobs:
+  should-push:
+    runs-on: ubuntu-latest
+    outputs:
+      should_push: ${{ steps.push_check.outputs.should_push }}
+    steps:
+      - id: push_check
+        run: |
+          if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.action }}" = "published" ]; then
+            echo "should_push=true"
+            echo "should_push=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_push=false"
+            echo "should_push=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Builds on every push/PR (smoke test — also proves the musl static link
+  # works before deploy day), pushes only on release. IMAGE_NAME is not set:
+  # the image is <registry>/private/command-center:<tag> (lowercased repo
+  # name) plus :latest via PUSH_LATEST (the reusable workflow default) —
+  # safe here because this repo publishes exactly one image.
+  publish:
+    needs: [should-push]
+    uses: l3tum/reusable-workflows/.github/workflows/publish-forgejo.yml@main
+    with:
+      PUSH: ${{ needs.should-push.outputs.should_push }}
+    secrets:
+      PACKAGE_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
