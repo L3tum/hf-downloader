@@ -1,4 +1,4 @@
-FROM python:3.12.16-slim@sha256:05a994d2344eb364cc186910f4fc8786a38215f39f00d0acc25bff33a08f4177
+FROM python:3.15.2-slim@sha256:3c5426211a36454d7a58b31e306cfefaac2c63b016e9f1a067b652ec602a4d15
 
 RUN pip install --no-cache-dir -U "huggingface_hub[cli,hf_xet]"
 
